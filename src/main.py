@@ -11,6 +11,10 @@ def run_pipeline():
     print("Iniciando pipeline de extração...")
     df = extract_data()
     print(f"Dados extraídos com sucesso! Total de linhas: {len(df)}")
+
+    print("Iniciando tratamento dos dados...")
+    df = tratamento_bronze(df)
+    print(f"Dados tratados com sucesso! Total de linhas: {len(df)}")
     
     print("Iniciando carga no BigQuery...")
     load_bronze(df)
