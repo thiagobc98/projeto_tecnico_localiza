@@ -22,6 +22,7 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
         .str.replace('[^\w\s]', '', regex=True) # Remove caracteres especiais (acentos, pontuações)
     )
 
+    print("Colunas do DataFrame após padronização:", df.columns.tolist())
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
     df['rick_score'] = pd.to_numeric(df['rick_score'], errors='coerce')
