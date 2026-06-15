@@ -21,6 +21,11 @@ def load_bronze(df: pd.DataFrame):
         client = bigquery.Client(project=PROJECT_ID)
 
 
+    # Garante que o dataset 'bronze' existe no BigQuery
+    dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
+    dataset_ref.location = "US"  # Altere para a região desejada se necessário (ex: "southamerica-east1")
+    client.create_dataset(dataset_ref, exists_ok=True)
+
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
     job_config = bigquery.LoadJobConfig(
