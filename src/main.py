@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from extract import extract_data
-from load_bronze import load_bronze
+from load_bronze import load_bronze, tratamento_bronze
 
 def run_pipeline():
     print("Iniciando pipeline de extração...")

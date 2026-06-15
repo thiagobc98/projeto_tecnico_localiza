@@ -22,9 +22,9 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
         .str.replace('[^\w\s]', '', regex=True) # Remove caracteres especiais (acentos, pontuações)
     )
 
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df['amount'] = df['amount'].astype(float)
-    df['rick_score'] = df['rick_score'].astype(float)
+    df['risk_score'] = df['risk_score'].astype(float)
 
     df = df.rename(columns={
     'timestamp': 'date_hour_transaction',
@@ -38,7 +38,7 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     'session_duration': 'session_duration',
     'purchase_pattern': 'purchase_pattern',
     'age_group': 'age_group',
-    'rick_score': 'rick_score',
+    'risk_score': 'risk_score',
     'anomaly': 'anomaly'
 })
     
