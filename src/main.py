@@ -1,5 +1,6 @@
 import sys
 import os
+import gc
 
 # Adiciona o diretório atual ao sys.path para garantir que os imports funcionem
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +27,6 @@ def run_pipeline():
     load_bronze(df_bronze)
     
     # Liberar df_bronze após o load
-    # (dentro de load_bronze a variável local já é excluída, mas limpamos a referência local aqui também)
     gc.collect()
     
     print("Iniciando processamento para a camada Silver...")
