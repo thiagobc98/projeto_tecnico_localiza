@@ -45,3 +45,4 @@ jobs:
         region: us-east1
         source_dir: ./src
         entry_point: run_etl_cf
+        environment: GEN_2
