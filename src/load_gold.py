@@ -22,9 +22,9 @@ def load_gold():
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
     
-    print("Iniciando processamento da camada Gold no BigQuery...")
+    print("Iniciando processamento da camada Gold no BigQuery com SQL...")
     
-    # Query 1: location_region (region) por média de risk_score
+    # Query 1: region por média de risk_score
     query_gold1 = f"""
     CREATE OR REPLACE TABLE `{PROJECT_ID}.{DATASET_ID}.region_risk_average` AS
     SELECT 
@@ -35,7 +35,7 @@ def load_gold():
     ORDER BY avg_risk_score DESC
     """
     
-    # Query 2: Transação 'sale' mais recente por receiving address (address_receiver), top 3 com maior value (amount)
+    # Query 2: Transação 'sale' mais recente por receiving address (address_receiver), top 3 com maior value
     query_gold2 = f"""
     CREATE OR REPLACE TABLE `{PROJECT_ID}.{DATASET_ID}.top_receiving_addresses_sales` AS
     WITH ranked_sales AS (
