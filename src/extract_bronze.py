@@ -22,8 +22,24 @@ def extract_bronze() -> pd.DataFrame:
         
     query = f"SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`"
     
+    dtypes = {
+        'date_hour_transaction': 'datetime64[ns]',
+        'address_sender': 'string',
+        'address_receiver': 'string',
+        'value': 'float32',
+        'type_transaction': 'category',
+        'region': 'category',
+        'ip_prefix': 'string',
+        'login_frequency': 'float32',
+        'session_duration': 'float32',
+        'purchase_pattern': 'category',
+        'age_group': 'category',
+        'risk_score': 'float32',
+        'anomaly': 'float32'
+    }
+    
     print(f"Buscando dados da tabela {DATASET_ID}.{TABLE_ID} no BigQuery...")
-    df = client.query(query).to_dataframe()
+    df = client.query(query).to_dataframe(dtypes=dtypes)
     
     return df
 
