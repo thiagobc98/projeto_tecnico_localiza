@@ -17,4 +17,4 @@ def extract_data():
         'risk_score': 'float32',
         'anomaly': 'float32'          # Usamos float32 para suportar possíveis nulos
     }
-    return pd.read_csv('gs://landing-raw/df_fraud_credit.csv', dtype=dtypes)
+    return pd.read_csv('gs://landing-raw/df_fraud_credit.csv', dtype=dtypes, na_values=['none', 'None', 'NaN', 'null', ''])
