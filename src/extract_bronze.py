@@ -23,7 +23,7 @@ def extract_bronze() -> pd.DataFrame:
     query = f"SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`"
     
     dtypes = {
-        'date_hour_transaction': 'datetime64[ns]',
+        'date_hour_transaction': 'datetime64[ns, UTC]',
         'address_sender': 'string',
         'address_receiver': 'string',
         'value': 'float32',
