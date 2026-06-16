@@ -29,9 +29,19 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Run Pipeline Script
+    - name: Run Pipeline Script (Validation)
       env:
         PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       run: |
-        # Executa o script python do pipeline
+        # Executa o script python do pipeline para validar
         python src/main.py
+
+    - name: Deploy to Cloud Functions
+      id: deploy
+      uses: google-github-actions/deploy-cloudfunctions@v2
+      with:
+        name: localiza-etl-pipeline
+        runtime: python311
+        region: us-east1
+        source_dir: ./src
+        entry_point: run_etl_cf
