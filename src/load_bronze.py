@@ -1,6 +1,7 @@
 from google.cloud import bigquery
 import pandas as pd
 import os
+import gc
 from dotenv import load_dotenv
 
 # Load environment variables from .env
