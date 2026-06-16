@@ -8,12 +8,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "bronze"
-TABLE_ID = "bronze"
+DATASET_ID = "localiza_bronze"
+TABLE_ID = "localiza_bronze"
 
 
 def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
-    
     # Padroniza os nomes das colunas
     df.columns = (
         df.columns
@@ -31,45 +30,41 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     df['anomaly'] = pd.to_numeric(df['anomaly'], errors='coerce')
 
     df = df.rename(columns={
-    'timestamp': 'date_hour_transaction',
-    'sending_address': 'address_sender',
-    'receiving_address': 'address_receiver',
-    'amount': 'value',
-    'transaction_type': 'type_transaction',
-    'location_region': 'region',
-    'ip_prefix': 'ip_prefix',
-    'login_frequency': 'login_frequency',
-    'session_duration': 'session_duration',
-    'purchase_pattern': 'purchase_pattern',
-    'age_group': 'age_group',
-    'risk_score': 'risk_score',
-    'anomaly': 'anomaly'
-})
-    
+        'timestamp': 'date_hour_transaction',
+        'sending_address': 'address_sender',
+        'receiving_address': 'address_receiver',
+        'amount': 'value',
+        'transaction_type': 'type_transaction',
+        'location_region': 'region',
+        'ip_prefix': 'ip_prefix',
+        'login_frequency': 'login_frequency',
+        'session_duration': 'session_duration',
+        'purchase_pattern': 'purchase_pattern',
+        'age_group': 'age_group',
+        'risk_score': 'risk_score',
+        'anomaly': 'anomaly'
+    })
     
     return df
 
 def load_bronze(df: pd.DataFrame):
     client_secrets_file = os.getenv("CLIENT_SECRET")
     
-    # Se houver arquivo de credenciais configurado localmente no .env, usa ele.
-    # Caso contrário (como no GitHub Actions), usa a autenticação padrão do ambiente (ADC).
     if client_secrets_file and os.path.exists(client_secrets_file):
         client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
     else:
         client = bigquery.Client(project=PROJECT_ID)
 
-
-    # Garante que o dataset 'bronze' existe no BigQuery
+    # Garante que o dataset 'localiza_bronze' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
-    dataset_ref.location = "US"  # Altere para a região desejada se necessário (ex: "southamerica-east1")
+    dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
 
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
     # Para evitar estourar a memória RAM (OOM) do worker, salvamos o dataframe em um arquivo temporário no disco,
     # limpamos o DataFrame da memória e carregamos a partir do arquivo.
-    temp_file = "/tmp/temp_bronze.parquet"
+    temp_file = "/tmp/temp_localiza_bronze.parquet"
     os.makedirs(os.path.dirname(temp_file), exist_ok=True)
     
     print(f"Salvando DataFrame temporariamente em {temp_file}...")
@@ -98,3 +93,10 @@ def load_bronze(df: pd.DataFrame):
         os.remove(temp_file)
 
     print(f"Dados carregados para {table_ref} com sucesso!")
+
+if __name__ == '__main__':
+    # Teste local
+    from extract_raw import extract_raw
+    df_raw = extract_raw()
+    df_treated = tratamento_bronze(df_raw)
+    load_bronze(df_treated)

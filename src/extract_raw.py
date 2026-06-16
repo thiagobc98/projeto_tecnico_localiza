@@ -3,18 +3,16 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env
+# Load environment variables
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_bronze"
-TABLE_ID = "localiza_bronze"
+DATASET_ID = "localiza_raw"
+TABLE_ID = "raw_fraud_credit"
 
-def extract_bronze() -> pd.DataFrame:
+def extract_raw() -> pd.DataFrame:
     client_secrets_file = os.getenv("CLIENT_SECRET")
     
-    # Se houver arquivo de credenciais local no .env, usa ele.
-    # Caso contrário (no GitHub Actions), usa a autenticação automática do ambiente.
     if client_secrets_file and os.path.exists(client_secrets_file):
         client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
     else:
@@ -23,19 +21,20 @@ def extract_bronze() -> pd.DataFrame:
     query = f"SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`"
     
     dtypes = {
-        'date_hour_transaction': 'datetime64[ns, UTC]',
-        'address_sender': 'string',
-        'address_receiver': 'string',
-        'value': 'float32',
-        'type_transaction': 'category',
-        'region': 'category',
+        'timestamp': 'string',
+        'sending_address': 'string',
+        'receiving_address': 'string',
+        'amount': 'string',
+        'transaction_type': 'category',
+        'location_region': 'category',
         'ip_prefix': 'string',
-        'login_frequency': 'float32',
-        'session_duration': 'float32',
+        'login_frequency': 'string',
+        'session_duration': 'string',
         'purchase_pattern': 'category',
         'age_group': 'category',
-        'risk_score': 'float32',
-        'anomaly': 'float32'
+        'risk_score': 'string',
+        'anomaly': 'string',
+        'date_upload_file_bucket': 'datetime64[ns, UTC]'
     }
     
     print(f"Buscando dados da tabela {DATASET_ID}.{TABLE_ID} no BigQuery...")
@@ -44,6 +43,6 @@ def extract_bronze() -> pd.DataFrame:
     return df
 
 if __name__ == '__main__':
-    df = extract_bronze()
-    print(f"Extração concluída! Total de linhas: {len(df)}")
+    df = extract_raw()
+    print(f"Extração da Raw concluída! Total de linhas: {len(df)}")
     print(df.head())

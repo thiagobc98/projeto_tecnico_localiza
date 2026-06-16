@@ -8,15 +8,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "silver"
-TABLE_ID = "silver"
+DATASET_ID = "localiza_silver"
+TABLE_ID = "localiza_silver"
 
 def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
     print("Iniciando limpeza e transformações para a camada Silver...")
     
     # Remove duplicatas
     linhas_antes = len(df)
-    # df = df.drop_duplicates()
     df = df.drop_duplicates(
         subset=['date_hour_transaction','address_sender','address_receiver']
     )
@@ -47,7 +46,7 @@ def load_silver(df: pd.DataFrame):
     else:
         client = bigquery.Client(project=PROJECT_ID)
         
-    # Garante que o dataset 'silver' existe no BigQuery
+    # Garante que o dataset 'localiza_silver' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -55,7 +54,7 @@ def load_silver(df: pd.DataFrame):
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
     # Salva o DataFrame temporariamente no disco para evitar estourar a RAM do worker (OOM)
-    temp_file = "/tmp/temp_silver.parquet"
+    temp_file = "/tmp/temp_localiza_silver.parquet"
     os.makedirs(os.path.dirname(temp_file), exist_ok=True)
     
     print(f"Salvando DataFrame Silver temporariamente em {temp_file}...")

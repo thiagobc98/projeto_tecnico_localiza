@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "gold"
+DATASET_ID = "localiza_gold"
 
 def load_gold():
     client_secrets_file = os.getenv("CLIENT_SECRET")
@@ -17,7 +17,7 @@ def load_gold():
     else:
         client = bigquery.Client(project=PROJECT_ID)
 
-    # Garante que o dataset 'gold' existe no BigQuery
+    # Garante que o dataset 'localiza_gold' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -30,7 +30,7 @@ def load_gold():
     SELECT 
       region, 
       AVG(SAFE_CAST(risk_score AS FLOAT64)) AS average_risk_score 
-    FROM `{PROJECT_ID}.silver.silver` 
+    FROM `{PROJECT_ID}.localiza_silver.localiza_silver` 
     GROUP BY 1 
     ORDER BY average_risk_score DESC
     """
@@ -44,7 +44,7 @@ def load_gold():
         value,
         date_hour_transaction,
         ROW_NUMBER() OVER(PARTITION BY address_receiver ORDER BY date_hour_transaction DESC) as rn
-      FROM `{PROJECT_ID}.silver.silver`
+      FROM `{PROJECT_ID}.localiza_silver.localiza_silver`
       WHERE type_transaction = 'sale'
     )
     SELECT 
@@ -57,15 +57,15 @@ def load_gold():
     LIMIT 3
     """
     
-    print("Executando carga para gold.region_risk_average...")
+    print("Executando carga para localiza_gold.region_risk_average...")
     query_job1 = client.query(query_gold1)
     query_job1.result()
-    print("Tabela gold.region_risk_average criada com sucesso!")
+    print("Tabela localiza_gold.region_risk_average criada com sucesso!")
     
-    print("Executando carga para gold.top_receiving_addresses_sales...")
+    print("Executando carga para localiza_gold.top_receiving_addresses_sales...")
     query_job2 = client.query(query_gold2)
     query_job2.result()
-    print("Tabela gold.top_receiving_addresses_sales criada com sucesso!")
+    print("Tabela localiza_gold.top_receiving_addresses_sales criada com sucesso!")
 
 if __name__ == '__main__':
     load_gold()
