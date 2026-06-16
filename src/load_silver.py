@@ -27,6 +27,9 @@ def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
     # Filtra transações com valores negativos 
     df = df[df['value'] >= 0]
     
+    # Substitui valores 0 na coluna 'region' por NA
+    df['region'] = df['region'].replace('0', pd.NA)
+    
     # Padroniza strings para minúsculo nas colunas categóricas
     for col in df.select_dtypes(include=['object']).columns:
         df[col] = df[col].astype(str).str.strip().str.lower()
