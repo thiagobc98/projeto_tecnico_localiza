@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from extract import extract_data
 from load_bronze import load_bronze, tratamento_bronze
 from load_silver import load_silver, transform_silver
+from load_gold import load_gold
 
 def run_pipeline():
     print("Iniciando pipeline de extração...")
@@ -25,6 +26,9 @@ def run_pipeline():
     
     print("Iniciando carga na camada Silver do BigQuery...")
     load_silver(df_silver)
+    
+    print("Iniciando processamento e carga da camada Gold do BigQuery...")
+    load_gold()
     
     print("Pipeline finalizado com sucesso!")
 
