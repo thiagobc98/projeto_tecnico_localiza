@@ -38,11 +38,10 @@ jobs:
 
     - name: Deploy to Cloud Functions
       id: deploy
-      uses: google-github-actions/deploy-cloud-functions@v2
+      uses: google-github-actions/deploy-cloud-functions@v3
       with:
         name: localiza-etl-pipeline
         runtime: python311
         region: us-east1
         source_dir: ./src
         entry_point: run_etl_cf
-        environment: GEN_2
