@@ -29,7 +29,7 @@ def load_gold():
     CREATE OR REPLACE TABLE `{PROJECT_ID}.{DATASET_ID}.region_risk_average` AS
     SELECT 
       region, 
-      AVG(risk_score) AS avg_risk_score 
+      AVG(SAFE_CAST(risk_score AS FLOAT64)) AS avg_risk_score 
     FROM `{PROJECT_ID}.silver.silver` 
     GROUP BY region 
     ORDER BY avg_risk_score DESC

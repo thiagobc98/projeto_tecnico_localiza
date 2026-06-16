@@ -24,6 +24,7 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
 
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+    df['rick_score'] = pd.to_numeric(df['rick_score'], errors='coerce')
 
     df = df.rename(columns={
     'timestamp': 'date_hour_transaction',
