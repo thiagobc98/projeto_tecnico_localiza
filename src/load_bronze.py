@@ -26,6 +26,9 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
     df['risk_score'] = pd.to_numeric(df['risk_score'], errors='coerce')
+    df['login_frequency'] = pd.to_numeric(df['login_frequency'], errors='coerce')
+    df['session_duration'] = pd.to_numeric(df['session_duration'], errors='coerce')
+    df['anomaly'] = pd.to_numeric(df['anomaly'], errors='coerce')
 
     df = df.rename(columns={
     'timestamp': 'date_hour_transaction',

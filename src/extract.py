@@ -6,15 +6,15 @@ def extract_data():
         'timestamp': 'int64',
         'sending_address': 'string',
         'receiving_address': 'string',
-        'amount': 'float32',
+        'amount': 'string',
         'transaction_type': 'category',
         'location_region': 'category',
         'ip_prefix': 'string',
-        'login_frequency': 'float32',  # Usamos float32 para suportar possíveis nulos
-        'session_duration': 'float32',
+        'login_frequency': 'string',
+        'session_duration': 'string',
         'purchase_pattern': 'category',
         'age_group': 'category',
-        'risk_score': 'float32',
-        'anomaly': 'float32'          # Usamos float32 para suportar possíveis nulos
+        'risk_score': 'string',
+        'anomaly': 'string'
     }
     return pd.read_csv('gs://landing-raw/df_fraud_credit.csv', dtype=dtypes, na_values=['none', 'None', 'NaN', 'null', ''])
