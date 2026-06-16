@@ -1,10 +1,11 @@
 from google.cloud import storage
 from google.cloud import bigquery
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import os
 import gc
 from dotenv import load_dotenv
-from extract import extract_data
 
 # Load environment variables
 load_dotenv()
@@ -29,42 +30,78 @@ def get_gcs_file_updated_time(bucket_name, blob_name):
     return blob.updated
 
 def load_raw():
-    print("Iniciando carregamento da camada Raw...")
+    print("Iniciando carregamento da camada Raw de forma otimizada (baixo uso de RAM)...")
     
-    # Busca a data de upload/atualização do arquivo no GCS
+    # 1. Busca a data de upload/atualização do arquivo no GCS
     print(f"Buscando metadados do arquivo {BLOB_NAME} no bucket {BUCKET_NAME}...")
     upload_time = get_gcs_file_updated_time(BUCKET_NAME, BLOB_NAME)
     print(f"Data de upload identificada: {upload_time}")
     
-    # Extrai os dados do GCS usando Pandas otimizado
-    df = extract_data()
+    local_csv = "/tmp/temp_raw.csv"
+    temp_parquet = "/tmp/temp_raw.parquet"
+    os.makedirs(os.path.dirname(local_csv), exist_ok=True)
     
-    # Adiciona a coluna com a data de upload no bucket
-    # Usamos o timestamp em formato UTC e garantimos a conversão correta
-    df['date_upload_file_bucket'] = pd.to_datetime(upload_time)
-    
-    # Salva o DataFrame temporariamente no disco para evitar OOM
-    temp_file = "/tmp/temp_raw.parquet"
-    os.makedirs(os.path.dirname(temp_file), exist_ok=True)
-    
-    print(f"Salvando DataFrame Raw temporariamente em {temp_file}...")
-    df.to_parquet(temp_file, index=False)
-    
-    # Limpa DataFrame e força GC
-    del df
-    gc.collect()
-    
-    # Carrega o Parquet no BigQuery
+    # 2. Download do arquivo do GCS para o disco local em stream (evita manter em RAM)
+    print("Baixando arquivo do GCS para o disco local...")
     client_secrets_file = os.getenv("CLIENT_SECRET")
     if client_secrets_file and os.path.exists(client_secrets_file):
-        client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        storage_client = storage.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
     else:
-        client = bigquery.Client(project=PROJECT_ID)
+        storage_client = storage.Client(project=PROJECT_ID)
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob(BLOB_NAME)
+    blob.download_to_filename(local_csv)
+    print("Download concluído!")
+    
+    # 3. Conversão incremental para Parquet usando chunks
+    print("Processando CSV em chunks e gerando Parquet...")
+    dtypes = {
+        'timestamp': 'int64',
+        'sending_address': 'string',
+        'receiving_address': 'string',
+        'amount': 'string',
+        'transaction_type': 'category',
+        'location_region': 'category',
+        'ip_prefix': 'string',
+        'login_frequency': 'string',
+        'session_duration': 'string',
+        'purchase_pattern': 'category',
+        'age_group': 'category',
+        'risk_score': 'string',
+        'anomaly': 'string'
+    }
+    
+    chunk_size = 50000
+    writer = None
+    
+    for chunk in pd.read_csv(local_csv, dtype=dtypes, na_values=['none', 'None', 'NaN', 'null', ''], chunksize=chunk_size):
+        chunk['date_upload_file_bucket'] = pd.to_datetime(upload_time)
         
-    # Garante que o dataset 'raw' existe no BigQuery
+        table = pa.Table.from_pandas(chunk, preserve_index=False)
+        
+        if writer is None:
+            writer = pq.ParquetWriter(temp_parquet, table.schema)
+        
+        writer.write_table(table)
+        
+    if writer:
+        writer.close()
+    
+    print("Conversão incremental concluída com sucesso!")
+    
+    # Remove o CSV temporário para liberar espaço
+    if os.path.exists(local_csv):
+        os.remove(local_csv)
+        
+    # 4. Carrega o arquivo Parquet final no BigQuery
+    if client_secrets_file and os.path.exists(client_secrets_file):
+        bq_client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+    else:
+        bq_client = bigquery.Client(project=PROJECT_ID)
+        
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
-    client.create_dataset(dataset_ref, exists_ok=True)
+    bq_client.create_dataset(dataset_ref, exists_ok=True)
     
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
@@ -74,13 +111,13 @@ def load_raw():
     )
     
     print(f"Carregando arquivo Parquet na tabela {table_ref}...")
-    with open(temp_file, "rb") as source_file:
-        job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
+    with open(temp_parquet, "rb") as source_file:
+        job = bq_client.load_table_from_file(source_file, table_ref, job_config=job_config)
         job.result()
         
-    # Limpa arquivo temporário
-    if os.path.exists(temp_file):
-        os.remove(temp_file)
+    # Remove o Parquet temporário
+    if os.path.exists(temp_parquet):
+        os.remove(temp_parquet)
         
     print(f"Carga da camada Raw concluída com sucesso para {table_ref}!")
 
