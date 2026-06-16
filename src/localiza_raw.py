@@ -106,7 +106,7 @@ def load_raw():
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
     job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_TRUNCATE",
+        write_disposition="WRITE_APPEND",
         source_format=bigquery.SourceFormat.PARQUET
     )
     

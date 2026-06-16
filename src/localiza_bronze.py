@@ -76,7 +76,7 @@ def load_bronze(df: pd.DataFrame):
     gc.collect()
 
     job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_TRUNCATE",
+        write_disposition="WRITE_APPEND",
         source_format=bigquery.SourceFormat.PARQUET
     )
 

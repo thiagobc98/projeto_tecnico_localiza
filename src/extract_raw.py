@@ -18,7 +18,12 @@ def extract_raw() -> pd.DataFrame:
     else:
         client = bigquery.Client(project=PROJECT_ID)
         
-    query = f"SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`"
+    query = f"""
+    SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
+    WHERE date_upload_file_bucket = (
+        SELECT MAX(date_upload_file_bucket) FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
+    )
+    """
     
     dtypes = {
         'timestamp': 'string',
