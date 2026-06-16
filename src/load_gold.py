@@ -29,10 +29,10 @@ def load_gold():
     CREATE OR REPLACE TABLE `{PROJECT_ID}.{DATASET_ID}.region_risk_average` AS
     SELECT 
       region, 
-      AVG(SAFE_CAST(risk_score AS FLOAT64)) AS avg_risk_score 
+      AVG(SAFE_CAST(risk_score AS FLOAT64)) AS average_risk_score 
     FROM `{PROJECT_ID}.silver.silver` 
-    GROUP BY region 
-    ORDER BY avg_risk_score DESC
+    GROUP BY 1 
+    ORDER BY average_risk_score DESC
     """
     
     # Query 2: Transação 'sale' mais recente por receiving address (address_receiver), top 3 com maior value
