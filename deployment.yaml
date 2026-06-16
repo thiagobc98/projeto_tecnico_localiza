@@ -1,0 +1,10 @@
+environments:
+  dev:
+    project: etl-teste-tecnico
+    region: us-east1
+    composer_environment: composer-teste-tec-etl
+    artifact_storage:
+      bucket: teste_tec_etl_airflow
+      path_prefix: "localiza-etl-"
+    pipelines:
+      - source: 'orchestration_pipeline.yaml'

@@ -18,14 +18,30 @@ def run_pipeline():
     df_bronze = tratamento_bronze(df)
     print(f"Dados tratados para Bronze com sucesso! Total de linhas: {len(df_bronze)}")
     
+    # Liberar memória do df bruto
+    del df
+    gc.collect()
+    
     print("Iniciando carga na camada Bronze do BigQuery...")
     load_bronze(df_bronze)
     
+    # Liberar df_bronze após o load
+    # (dentro de load_bronze a variável local já é excluída, mas limpamos a referência local aqui também)
+    gc.collect()
+    
     print("Iniciando processamento para a camada Silver...")
-    df_silver = transform_silver(df_bronze)
+    # Busca os dados da Bronze no BigQuery para o dataframe local
+    from extract_bronze import extract_bronze
+    df_bronze_loaded = extract_bronze()
+    
+    df_silver = transform_silver(df_bronze_loaded)
+    del df_bronze_loaded
+    gc.collect()
     
     print("Iniciando carga na camada Silver do BigQuery...")
     load_silver(df_silver)
+    
+    gc.collect()
     
     print("Iniciando processamento e carga da camada Gold do BigQuery...")
     load_gold()

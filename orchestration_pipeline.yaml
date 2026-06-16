@@ -1,0 +1,16 @@
+pipelineId: localiza_etl_pipeline
+description: "ETL pipeline orchestrating GCS -> Bronze -> Silver -> Gold layers"
+tags: ["job:datacloud:antigravity"]
+
+# Executa uma vez ao dia à meia-noite
+schedule:
+  cronExpression: "0 0 * * *"
+  startTime: "2026-06-16T00:00:00"
+  endTime: "2030-06-16T00:00:00"
+
+tasks:
+  - taskId: run_etl_main
+    description: "Executa o script principal do pipeline Python"
+    bashConfig:
+      script: |
+        python src/main.py

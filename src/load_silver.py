@@ -53,14 +53,30 @@ def load_silver(df: pd.DataFrame):
     
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
+    # Salva o DataFrame temporariamente no disco para evitar estourar a RAM do worker (OOM)
+    temp_file = "/tmp/temp_silver.parquet"
+    os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+    
+    print(f"Salvando DataFrame Silver temporariamente em {temp_file}...")
+    df.to_parquet(temp_file, index=False)
+    
+    # Limpa DataFrame e força GC
+    del df
+    gc.collect()
+    
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
-        autodetect=True
+        source_format=bigquery.SourceFormat.PARQUET
     )
     
-    print(f"Carregando dados na tabela {table_ref} no BigQuery...")
-    job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
-    job.result()
+    print(f"Carregando arquivo Parquet na tabela {table_ref}...")
+    with open(temp_file, "rb") as source_file:
+        job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
+        job.result()
+        
+    # Limpa arquivo temporário
+    if os.path.exists(temp_file):
+        os.remove(temp_file)
     
     print(f"Carga concluída com sucesso para {table_ref}!")
 
