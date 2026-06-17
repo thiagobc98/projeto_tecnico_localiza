@@ -29,10 +29,8 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-
-
-    - name: Deploy to Cloud Functions
-      id: deploy
+    - name: Deploy Main ETL to Cloud Functions
+      id: deploy-main
       uses: google-github-actions/deploy-cloud-functions@v3
       with:
         name: localiza-etl-pipeline
@@ -40,3 +38,23 @@ jobs:
         region: us-east1
         source_dir: ./src
         entry_point: run_etl_cf
+
+    - name: Deploy Gold Tabela 1 to Cloud Functions
+      id: deploy-gold-1
+      uses: google-github-actions/deploy-cloud-functions@v3
+      with:
+        name: gold_tabela_1
+        runtime: python311
+        region: us-east1
+        source_dir: ./src
+        entry_point: run_gold_tabela_1_cf
+
+    - name: Deploy Gold Tabela 2 to Cloud Functions
+      id: deploy-gold-2
+      uses: google-github-actions/deploy-cloud-functions@v3
+      with:
+        name: gold_tabela_2
+        runtime: python311
+        region: us-east1
+        source_dir: ./src
+        entry_point: run_gold_tabela_2_cf

@@ -11,7 +11,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
 # Importa as funções das camadas
 from localiza_raw import load_raw
-from localiza_gold import load_gold
 
 def check_new_file_condition():
     from google.cloud import bigquery

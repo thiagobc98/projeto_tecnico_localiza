@@ -19,7 +19,11 @@ BLOB_NAME = "df_fraud_credit.csv"
 def get_gcs_file_updated_time(bucket_name, blob_name):
     client_secrets_file = os.getenv("CLIENT_SECRET")
     if client_secrets_file and os.path.exists(client_secrets_file):
-        client = storage.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        try:
+            client = storage.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        except Exception as e:
+            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão do ambiente.")
+            client = storage.Client(project=PROJECT_ID)
     else:
         client = storage.Client(project=PROJECT_ID)
         
@@ -37,21 +41,30 @@ def load_raw():
     upload_time = get_gcs_file_updated_time(BUCKET_NAME, BLOB_NAME)
     print(f"Data de upload identificada: {upload_time}")
     
-    local_csv = "/tmp/temp_raw.csv"
-    temp_parquet = "/tmp/temp_raw.parquet"
-    os.makedirs(os.path.dirname(local_csv), exist_ok=True)
+    import tempfile
+    temp_dir = tempfile.gettempdir()
+    local_csv = os.path.join(temp_dir, "temp_raw.csv")
+    temp_parquet = os.path.join(temp_dir, "temp_raw.parquet")
     
     # 2. Download do arquivo do GCS para o disco local em stream (evita manter em RAM)
-    print("Baixando arquivo do GCS para o disco local...")
+    print(f"Baixando arquivo do GCS para {local_csv}...")
     client_secrets_file = os.getenv("CLIENT_SECRET")
     if client_secrets_file and os.path.exists(client_secrets_file):
-        storage_client = storage.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        try:
+            storage_client = storage.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        except Exception as e:
+            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão do ambiente.")
+            storage_client = storage.Client(project=PROJECT_ID)
     else:
         storage_client = storage.Client(project=PROJECT_ID)
     bucket = storage_client.bucket(BUCKET_NAME)
     blob = bucket.blob(BLOB_NAME)
     blob.download_to_filename(local_csv)
-    print("Download concluído!")
+    
+    if os.path.exists(local_csv):
+        print(f"Download concluído! Tamanho do arquivo: {os.path.getsize(local_csv)} bytes")
+    else:
+        raise FileNotFoundError(f"Erro: O arquivo temporário {local_csv} não foi encontrado após o download!")
     
     # 3. Conversão incremental para Parquet usando chunks
     print("Processando CSV em chunks e gerando Parquet...")
@@ -95,7 +108,11 @@ def load_raw():
         
     # 4. Carrega o arquivo Parquet final no BigQuery
     if client_secrets_file and os.path.exists(client_secrets_file):
-        bq_client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        try:
+            bq_client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        except Exception as e:
+            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão do ambiente.")
+            bq_client = bigquery.Client(project=PROJECT_ID)
     else:
         bq_client = bigquery.Client(project=PROJECT_ID)
         

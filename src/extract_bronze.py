@@ -16,7 +16,11 @@ def extract_bronze() -> pd.DataFrame:
     # Se houver arquivo de credenciais local no .env, usa ele.
     # Caso contrário (no GitHub Actions), usa a autenticação automática do ambiente.
     if client_secrets_file and os.path.exists(client_secrets_file):
-        client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        try:
+            client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        except Exception as e:
+            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão.")
+            client = bigquery.Client(project=PROJECT_ID)
     else:
         client = bigquery.Client(project=PROJECT_ID)
         

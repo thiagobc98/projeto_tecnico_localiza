@@ -10,7 +10,6 @@ from localiza_raw import load_raw
 from extract_raw import extract_raw
 from localiza_bronze import load_bronze, tratamento_bronze
 from localiza_silver import load_silver, transform_silver
-from localiza_gold import load_gold
 
 def run_pipeline():
     # 1. Executa a camada RAW (Lê do GCS, adiciona timestamp e escreve na tabela RAW do BigQuery)
@@ -49,21 +48,43 @@ def run_pipeline():
     load_silver(df_silver)
     
     gc.collect()
-    
-    print("Iniciando processamento e carga da camada Gold do BigQuery...")
-    load_gold()
-    
-    print("Pipeline finalizado com sucesso!")
+    print("Pipeline (até Silver) finalizado com sucesso!")
 
 @functions_framework.http
 def run_etl_cf(request):
-    """Ponto de entrada (Entrypoint) para o GCP Cloud Functions (Gatilho HTTP)."""
+    """Ponto de entrada (Entrypoint) para o GCP Cloud Functions para rodar Raw, Bronze e Silver."""
     try:
         run_pipeline()
-        return "Pipeline ETL executado com sucesso!", 200
+        return "Pipeline ETL (até Silver) executado com sucesso!", 200
     except Exception as e:
         import traceback
         err = f"Erro na execução do pipeline: {str(e)}\n{traceback.format_exc()}"
+        print(err)
+        return err, 500
+
+@functions_framework.http
+def run_gold_tabela_1_cf(request):
+    """Ponto de entrada para o GCP Cloud Functions para rodar Gold 1 (region_risk_average)."""
+    try:
+        from localiza_gold import load_gold_tabela_1
+        load_gold_tabela_1()
+        return "Gold Tabela 1 (region_risk_average) executada com sucesso!", 200
+    except Exception as e:
+        import traceback
+        err = f"Erro na execução da Gold Tabela 1: {str(e)}\n{traceback.format_exc()}"
+        print(err)
+        return err, 500
+
+@functions_framework.http
+def run_gold_tabela_2_cf(request):
+    """Ponto de entrada para o GCP Cloud Functions para rodar Gold 2 (top_receiving_addresses_sales)."""
+    try:
+        from localiza_gold import load_gold_tabela_2
+        load_gold_tabela_2()
+        return "Gold Tabela 2 (top_receiving_addresses_sales) executada com sucesso!", 200
+    except Exception as e:
+        import traceback
+        err = f"Erro na execução da Gold Tabela 2: {str(e)}\n{traceback.format_exc()}"
         print(err)
         return err, 500
 
