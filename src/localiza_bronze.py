@@ -68,10 +68,15 @@ def load_bronze(df: pd.DataFrame):
 
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
-    # Para evitar estourar a memória RAM (OOM) do worker, salvamos o dataframe em um arquivo temporário no disco,
-    # limpamos o DataFrame da memória e carregamos a partir do arquivo.
-    temp_file = "/tmp/temp_localiza_bronze.parquet"
-    os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+    # Converte colunas de data de nanosegundos (ns) para microsegundos (us) para que o BigQuery detecte como TIMESTAMP
+    if 'dat_data_transaction' in df.columns:
+        df['dat_data_transaction'] = pd.to_datetime(df['dat_data_transaction'], utc=True).astype('datetime64[us, UTC]')
+    if 'dat_data_upload_bucket' in df.columns:
+        df['dat_data_upload_bucket'] = pd.to_datetime(df['dat_data_upload_bucket'], utc=True).astype('datetime64[us, UTC]')
+
+    import tempfile
+    temp_dir = tempfile.gettempdir()
+    temp_file = os.path.join(temp_dir, "temp_localiza_bronze.parquet")
     
     print(f"Salvando DataFrame temporariamente em {temp_file}...")
     df.to_parquet(temp_file, index=False)

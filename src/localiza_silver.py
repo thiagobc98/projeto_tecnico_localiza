@@ -56,9 +56,15 @@ def load_silver(df: pd.DataFrame):
     
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
-    # Salva o DataFrame temporariamente no disco para evitar estourar a RAM do worker (OOM)
-    temp_file = "/tmp/temp_localiza_silver.parquet"
-    os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+    # Converte colunas de data de nanosegundos (ns) para microsegundos (us) para que o BigQuery detecte como TIMESTAMP
+    if 'dat_data_transaction' in df.columns:
+        df['dat_data_transaction'] = pd.to_datetime(df['dat_data_transaction'], utc=True).astype('datetime64[us, UTC]')
+    if 'dat_data_upload_bucket' in df.columns:
+        df['dat_data_upload_bucket'] = pd.to_datetime(df['dat_data_upload_bucket'], utc=True).astype('datetime64[us, UTC]')
+
+    import tempfile
+    temp_dir = tempfile.gettempdir()
+    temp_file = os.path.join(temp_dir, "temp_localiza_silver.parquet")
     
     print(f"Salvando DataFrame Silver temporariamente em {temp_file}...")
     df.to_parquet(temp_file, index=False)

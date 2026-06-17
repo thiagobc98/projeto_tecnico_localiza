@@ -14,9 +14,25 @@ from localiza_raw import load_raw
 
 def check_new_file_condition():
     from google.cloud import bigquery
+    import pandas as pd
     project_id = "etl-teste-tecnico"
     client = bigquery.Client(project=project_id)
     
+    def to_utc_datetime(val):
+        if val is None:
+            return None
+        # Se for numérico (epoch em nanossegundos ou segundos)
+        if isinstance(val, (int, float)):
+            if val > 1e11:  # Nanossegundos
+                return pd.to_datetime(val, unit='ns', utc=True).to_pydatetime()
+            else:          # Segundos
+                return pd.to_datetime(val, unit='s', utc=True).to_pydatetime()
+        # Se for string, parseia
+        if isinstance(val, str):
+            return pd.to_datetime(val, utc=True).to_pydatetime()
+        # Caso contrário (datetime/Timestamp), normaliza para UTC
+        return pd.to_datetime(val, utc=True).to_pydatetime()
+
     # 1. Obtém a data de upload do arquivo que acabou de ser processado na RAW
     raw_query = f"SELECT MAX(date_upload_file_bucket) as max_raw FROM `{project_id}.localiza_raw.raw_fraud_credit`"
     try:
@@ -38,10 +54,14 @@ def check_new_file_condition():
         print(f"Tabela Bronze não encontrada ou vazia (primeira execução): {e}")
         max_bronze = None
         
-    print(f"Data arquivo RAW: {max_raw} | Maior data já processada na Bronze: {max_bronze}")
+    # Normaliza ambas as datas para comparação segura
+    max_raw_dt = to_utc_datetime(max_raw)
+    max_bronze_dt = to_utc_datetime(max_bronze)
+    
+    print(f"Data arquivo RAW (convertida): {max_raw_dt} | Maior data já processada na Bronze (convertida): {max_bronze_dt}")
     
     # 3. Valida se o arquivo é novo
-    if max_bronze is None or max_raw > max_bronze:
+    if max_bronze_dt is None or max_raw_dt > max_bronze_dt:
         print("Novo arquivo detectado no bucket! Prosseguindo para as próximas camadas.")
         return True
     else:
