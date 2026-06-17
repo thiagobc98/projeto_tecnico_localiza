@@ -28,22 +28,23 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     df['risk_score'] = pd.to_numeric(df['risk_score'], errors='coerce')
     df['login_frequency'] = pd.to_numeric(df['login_frequency'], errors='coerce')
     df['session_duration'] = pd.to_numeric(df['session_duration'], errors='coerce')
-    df['anomaly'] = pd.to_numeric(df['anomaly'], errors='coerce')
+    
 
     df = df.rename(columns={
-        'timestamp': 'date_hour_transaction',
-        'sending_address': 'address_sender',
-        'receiving_address': 'address_receiver',
-        'amount': 'value',
-        'transaction_type': 'type_transaction',
-        'location_region': 'region',
-        'ip_prefix': 'ip_prefix',
-        'login_frequency': 'login_frequency',
-        'session_duration': 'session_duration',
-        'purchase_pattern': 'purchase_pattern',
-        'age_group': 'age_group',
-        'risk_score': 'risk_score',
-        'anomaly': 'anomaly'
+        'timestamp': 'dat_data_transaction',
+        'sending_address': 'cod_endereco_enviado',
+        'receiving_address': 'cod_endereco_recebido',
+        'amount': 'vlr_valor',
+        'transaction_type': 'des_tipo_transacao',
+        'location_region': 'des_regiao',
+        'ip_prefix': 'vlr_ip_prefixo',
+        'login_frequency': 'vlr_login_frequencia',
+        'session_duration': 'vlr_duracao_sessao',
+        'purchase_pattern': 'des_comportamento_compra',
+        'age_group': 'des_faixa_etaria',
+        'risk_score': 'vlr_score_risco',
+        'anomaly': 'des_categoria_risco',
+        'date_upload_file_bucket': 'dat_data_upload_bucket'
     })
     
     return df

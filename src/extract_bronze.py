@@ -20,27 +20,30 @@ def extract_bronze() -> pd.DataFrame:
     else:
         client = bigquery.Client(project=PROJECT_ID)
         
+    # Extrai apenas as linhas do lote mais recente
     query = f"""
     SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
-    WHERE date_upload_file_bucket = (
-        SELECT MAX(date_upload_file_bucket) FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
+    WHERE dat_data_upload_bucket = (
+        SELECT MAX(dat_data_upload_bucket) FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
     )
     """
     
+    # Dtypes mapeados com os nomes em português da camada Bronze
     dtypes = {
-        'date_hour_transaction': 'datetime64[ns, UTC]',
-        'address_sender': 'string',
-        'address_receiver': 'string',
-        'value': 'float32',
-        'type_transaction': 'category',
-        'region': 'category',
-        'ip_prefix': 'string',
-        'login_frequency': 'float32',
-        'session_duration': 'float32',
-        'purchase_pattern': 'category',
-        'age_group': 'category',
-        'risk_score': 'float32',
-        'anomaly': 'float32'
+        'dat_data_transaction': 'datetime64[ns, UTC]',
+        'cod_endereco_enviado': 'string',
+        'cod_endereco_recebido': 'string',
+        'vlr_valor': 'float32',
+        'des_tipo_transacao': 'category',
+        'des_regiao': 'category',
+        'vlr_ip_prefixo': 'string',
+        'vlr_login_frequencia': 'float32',
+        'vlr_duracao_sessao': 'float32',
+        'des_comportamento_compra': 'category',
+        'des_faixa_etaria': 'category',
+        'vlr_score_risco': 'float32',
+        'des_categoria_risco': 'string',  # anomaly virou string
+        'dat_data_upload_bucket': 'datetime64[ns, UTC]'
     }
     
     print(f"Buscando dados da tabela {DATASET_ID}.{TABLE_ID} no BigQuery...")

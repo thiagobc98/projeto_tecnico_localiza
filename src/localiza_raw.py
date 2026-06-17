@@ -75,7 +75,7 @@ def load_raw():
     writer = None
     
     for chunk in pd.read_csv(local_csv, dtype=dtypes, na_values=['none', 'None', 'NaN', 'null', ''], chunksize=chunk_size):
-        chunk['date_upload_file_bucket'] = pd.to_datetime(upload_time)
+        chunk['date_upload_file_bucket'] = pd.Series(pd.to_datetime(upload_time), index=chunk.index).astype('datetime64[us, UTC]')
         
         table = pa.Table.from_pandas(chunk, preserve_index=False)
         

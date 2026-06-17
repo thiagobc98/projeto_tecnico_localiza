@@ -12,26 +12,26 @@ DATASET_ID = "localiza_silver"
 TABLE_ID = "localiza_silver"
 
 def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
-    print("Iniciando limpeza e transformações para a camada Silver...")
+    print("Iniciando limpeza e transformações para a camada Silver (nomes em português)...")
     
-    # Remove duplicatas
+    # Remove duplicatas baseadas na transação
     linhas_antes = len(df)
     df = df.drop_duplicates(
-        subset=['date_hour_transaction','address_sender','address_receiver']
+        subset=['dat_data_transaction', 'cod_endereco_enviado', 'cod_endereco_recebido']
     )
     print(f"Duplicatas removidas: {linhas_antes - len(df)} linhas.")
     
-    # Remove nulos nas colunas
-    df = df.dropna(subset=['date_hour_transaction', 'address_sender', 'address_receiver', 'value'])
+    # Remove nulos nas colunas essenciais
+    df = df.dropna(subset=['dat_data_transaction', 'cod_endereco_enviado', 'cod_endereco_recebido', 'vlr_valor'])
 
     # Filtra transações com valores negativos 
-    df = df[df['value'] >= 0]
+    df = df[df['vlr_valor'] >= 0]
     
-    # Substitui valores 0 na coluna 'region' por NA
-    df['region'] = df['region'].replace('0', pd.NA)
+    # Substitui valores '0' ou 0 na coluna 'des_regiao' por NA
+    df['des_regiao'] = df['des_regiao'].replace(['0', 0], pd.NA)
     
-    # Padroniza strings para minúsculo nas colunas categóricas
-    for col in df.select_dtypes(include=['object']).columns:
+    # Padroniza strings para minúsculo nas colunas categóricas/objeto
+    for col in df.select_dtypes(include=['object', 'category', 'string']).columns:
         df[col] = df[col].astype(str).str.strip().str.lower()
             
     print(f"Transformações concluídas! Total de linhas para Silver: {len(df)}")
@@ -40,7 +40,6 @@ def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
 def load_silver(df: pd.DataFrame):
     client_secrets_file = os.getenv("CLIENT_SECRET")
     
-    # Autenticação híbrida (local JSON ou automático no GitHub Actions)
     if client_secrets_file and os.path.exists(client_secrets_file):
         client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
     else:
@@ -81,7 +80,6 @@ def load_silver(df: pd.DataFrame):
     print(f"Carga concluída com sucesso para {table_ref}!")
 
 if __name__ == '__main__':
-    # Bloco para testar localmente caso execute o script direto
     from extract_bronze import extract_bronze
     df_bronze = extract_bronze()
     df_silver = transform_silver(df_bronze)

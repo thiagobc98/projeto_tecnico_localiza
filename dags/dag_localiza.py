@@ -31,7 +31,7 @@ def check_new_file_condition():
         raise AirflowSkipException("Nenhum dado encontrado na tabela RAW. Pulando etapas posteriores.")
         
     # 2. Obtém o maior timestamp de arquivo já processado na Bronze
-    bronze_query = f"SELECT MAX(date_upload_file_bucket) as max_bronze FROM `{project_id}.localiza_bronze.localiza_bronze`"
+    bronze_query = f"SELECT MAX(dat_data_upload_bucket) as max_bronze FROM `{project_id}.localiza_bronze.localiza_bronze`"
     try:
         bronze_result = list(client.query(bronze_query).result())
         max_bronze = bronze_result[0]['max_bronze'] if bronze_result else None
