@@ -24,12 +24,12 @@ def get_client():
 def run_data_quality_checks():
     client = get_client()
 
-    # 1. Garante que o dataset localiza_quality existe
+    # Garante que o dataset localiza_quality existe
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
 
-    # 2. Garante que a tabela data_quality_report existe
+    # Garante que a tabela data_quality_report existe
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
     schema = [
@@ -50,7 +50,7 @@ def run_data_quality_checks():
 
     print("Iniciando validação de Data Quality...")
     
-    # 3. Definição das regras de validação por tabela
+    # Definição das regras de validação por tabela
     # Cada regra mapeia um nome amigável para a condição SQL que representa o erro
     tables_rules = {
         "localiza_bronze.localiza_bronze": [
@@ -126,11 +126,10 @@ def run_data_quality_checks():
     has_failures = False
     now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    # 4. Executa a validação de forma otimizada (uma única query por tabela)
+    # Executa a validação de forma otimizada (uma única query por tabela)
     for table_name, rules in tables_rules.items():
         print(f"Executando regras de qualidade para {table_name}...")
         
-        # Monta a query dinâmica
         select_parts = ["COUNT(*) as total_rows"]
         for idx, rule in enumerate(rules):
             select_parts.append(f"COUNTIF({rule['condition']}) as err_{idx}")
@@ -180,7 +179,7 @@ def run_data_quality_checks():
             print(f"Erro ao auditar tabela {table_name}: {e}")
             has_failures = True
 
-    # 5. Insere os resultados na tabela de auditoria
+    # Insere os resultados na tabela de auditoria
     if report_rows:
         print(f"Gravando {len(report_rows)} registros de auditoria em {table_ref}...")
         errors = client.insert_rows_json(table_ref, report_rows)
@@ -191,7 +190,7 @@ def run_data_quality_checks():
     else:
         print("Nenhum registro de auditoria gerado.")
 
-    # 6. Se houve falha crítica de qualidade de dados, lança erro para falhar a DAG
+    # Se houve falha crítica de qualidade de dados, lança erro para falhar a DAG
     if has_failures:
         raise ValueError("O pipeline falhou nos testes de Data Quality. Verifique a tabela localiza_quality.data_quality_report.")
 
