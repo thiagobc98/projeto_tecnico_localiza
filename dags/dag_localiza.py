@@ -118,6 +118,17 @@ def run_silver_pipeline():
     del df_silver
     gc.collect()
 
+def run_data_quality_pipeline():
+    import gc
+    import importlib
+    import data_quality
+    importlib.reload(data_quality)
+    from data_quality import run_data_quality_checks
+    
+    print("Iniciando auditoria de Data Quality...")
+    run_data_quality_checks()
+    gc.collect()
+
 default_args = {
     'owner': 'localiza',
     'depends_on_past': False,
@@ -154,6 +165,11 @@ with DAG(
         python_callable=run_silver_pipeline,
     )
 
+    task_data_quality = PythonOperator(
+        task_id='localiza_data_quality',
+        python_callable=run_data_quality_pipeline,
+    )
+
     # Fluxo de execução
-    task_raw >> task_check_condition >> task_bronze >> task_silver
+    task_raw >> task_check_condition >> task_bronze >> task_silver >> task_data_quality
 
