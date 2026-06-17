@@ -29,6 +29,11 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+    - name: Deploy DAGs and source to Cloud Composer
+      run: |
+        gsutil -m cp -r ./src/* gs://us-east1-composer-teste-tec-d7ac08b8-bucket/dags/src/
+        gsutil -m cp ./dags/*.py gs://us-east1-composer-teste-tec-d7ac08b8-bucket/dags/
+
     - name: Deploy Main ETL to Cloud Functions
       id: deploy-main
       uses: google-github-actions/deploy-cloud-functions@v3
