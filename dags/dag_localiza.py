@@ -9,7 +9,10 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-# Importa as funções das camadas
+# Importa e recarrega as funções das camadas para evitar cache nos workers do Airflow
+import importlib
+import localiza_raw
+importlib.reload(localiza_raw)
 from localiza_raw import load_raw
 
 def check_new_file_condition():
@@ -70,6 +73,11 @@ def check_new_file_condition():
 
 def run_bronze_pipeline():
     import gc
+    import importlib
+    import extract_raw
+    import localiza_bronze
+    importlib.reload(extract_raw)
+    importlib.reload(localiza_bronze)
     from extract_raw import extract_raw
     from localiza_bronze import load_bronze, tratamento_bronze
     
@@ -85,6 +93,11 @@ def run_bronze_pipeline():
 
 def run_silver_pipeline():
     import gc
+    import importlib
+    import extract_bronze
+    import localiza_silver
+    importlib.reload(extract_bronze)
+    importlib.reload(localiza_silver)
     from extract_bronze import extract_bronze
     from localiza_silver import load_silver, transform_silver
     
