@@ -9,11 +9,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-# Importa e recarrega as funções das camadas para evitar cache nos workers do Airflow
-import importlib
-import localiza_raw
-importlib.reload(localiza_raw)
-from localiza_raw import load_raw
+# Módulos são carregados dinamicamente dentro das funções de execução para evitar cache nos workers
 
 def check_new_file_condition():
     from google.cloud import bigquery
@@ -70,6 +66,17 @@ def check_new_file_condition():
     else:
         print("O arquivo no bucket é antigo ou idêntico ao já processado. Pulando Bronze, Silver e Gold.")
         raise AirflowSkipException("Nenhum arquivo novo detectado no bucket.")
+
+def run_raw_pipeline():
+    import gc
+    import importlib
+    import localiza_raw
+    importlib.reload(localiza_raw)
+    from localiza_raw import load_raw
+    
+    print("Iniciando processamento da camada Raw...")
+    load_raw()
+    gc.collect()
 
 def run_bronze_pipeline():
     import gc
@@ -129,7 +136,7 @@ with DAG(
 
     task_raw = PythonOperator(
         task_id='localiza_raw',
-        python_callable=load_raw,
+        python_callable=run_raw_pipeline,
     )
 
     task_check_condition = PythonOperator(
