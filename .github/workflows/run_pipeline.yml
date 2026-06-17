@@ -29,6 +29,9 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
     - name: Deploy DAGs and source to Cloud Composer
       run: |
         gsutil -m cp -r ./src/* gs://us-east1-composer-teste-tec-d7ac08b8-bucket/dags/src/
