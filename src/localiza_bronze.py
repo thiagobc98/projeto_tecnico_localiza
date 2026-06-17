@@ -10,6 +10,16 @@ PROJECT_ID = "etl-teste-tecnico"
 DATASET_ID = "localiza_bronze"
 TABLE_ID = "localiza_bronze"
 
+def get_client():
+    client_secrets_file = os.getenv("CLIENT_SECRET")
+    if client_secrets_file and os.path.exists(client_secrets_file):
+        try:
+            return bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        except Exception as e:
+            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão.")
+            return bigquery.Client(project=PROJECT_ID)
+    else:
+        return bigquery.Client(project=PROJECT_ID)
 
 def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     # Padroniza os nomes das colunas
@@ -28,7 +38,6 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     df['login_frequency'] = pd.to_numeric(df['login_frequency'], errors='coerce')
     df['session_duration'] = pd.to_numeric(df['session_duration'], errors='coerce')
     
-
     df = df.rename(columns={
         'timestamp': 'dat_data_transaction',
         'sending_address': 'cod_endereco_enviado',
@@ -49,16 +58,7 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def load_bronze(df: pd.DataFrame):
-    client_secrets_file = os.getenv("CLIENT_SECRET")
-    
-    if client_secrets_file and os.path.exists(client_secrets_file):
-        try:
-            client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
-        except Exception as e:
-            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão.")
-            client = bigquery.Client(project=PROJECT_ID)
-    else:
-        client = bigquery.Client(project=PROJECT_ID)
+    client = get_client()
 
     # Garante que o dataset 'localiza_bronze' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
@@ -67,7 +67,7 @@ def load_bronze(df: pd.DataFrame):
 
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
-    # Converte colunas de data de nanosegundos  para microsegundos para que o BigQuery detecte como TIMESTAMP
+    # Converte colunas de data de nanosegundos para microsegundos para que o BigQuery detecte como TIMESTAMP
     if 'dat_data_transaction' in df.columns:
         df['dat_data_transaction'] = pd.to_datetime(df['dat_data_transaction'], utc=True).astype('datetime64[us, UTC]')
     if 'dat_data_upload_bucket' in df.columns:
@@ -102,9 +102,59 @@ def load_bronze(df: pd.DataFrame):
 
     print(f"Dados carregados para {table_ref} com sucesso!")
 
+def load_bronze_bq():
+    client = get_client()
+    
+    # Garante que o dataset 'localiza_bronze' existe no BigQuery
+    dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
+    dataset_ref.location = "US"
+    client.create_dataset(dataset_ref, exists_ok=True)
+    
+    table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+    
+    query = f"""
+    INSERT INTO `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}` (
+      dat_data_transaction,
+      cod_endereco_enviado,
+      cod_endereco_recebido,
+      vlr_valor,
+      des_tipo_transacao,
+      des_regiao,
+      vlr_ip_prefixo,
+      vlr_login_frequencia,
+      vlr_duracao_sessao,
+      des_comportamento_compra,
+      des_faixa_etaria,
+      vlr_score_risco,
+      des_categoria_risco,
+      dat_data_upload_bucket
+    )
+    SELECT
+      TIMESTAMP_SECONDS(SAFE_CAST(timestamp AS INT64)) AS dat_data_transaction,
+      sending_address AS cod_endereco_enviado,
+      receiving_address AS cod_endereco_recebido,
+      SAFE_CAST(amount AS NUMERIC) AS vlr_valor,
+      transaction_type AS des_tipo_transacao,
+      CASE WHEN TRIM(location_region) = '0' OR TRIM(location_region) = '' THEN NULL ELSE location_region END AS des_regiao,
+      ip_prefix AS vlr_ip_prefixo,
+      SAFE_CAST(login_frequency AS NUMERIC) AS vlr_login_frequencia,
+      SAFE_CAST(session_duration AS NUMERIC) AS vlr_duracao_sessao,
+      purchase_pattern AS des_comportamento_compra,
+      age_group AS des_faixa_etaria,
+      SAFE_CAST(risk_score AS FLOAT64) AS vlr_score_risco,
+      anomaly AS des_categoria_risco,
+      date_upload_file_bucket AS dat_data_upload_bucket
+    FROM `{PROJECT_ID}.localiza_raw.raw_fraud_credit`
+    WHERE date_upload_file_bucket = (
+        SELECT MAX(date_upload_file_bucket) FROM `{PROJECT_ID}.localiza_raw.raw_fraud_credit`
+    )
+    """
+    
+    print("Iniciando processamento e carga da camada Bronze via SQL...")
+    query_job = client.query(query)
+    query_job.result()
+    print(f"Carga da camada Bronze concluída com sucesso para {table_ref}!")
+
 if __name__ == '__main__':
-    # Teste local
-    from extract_raw import extract_raw
-    df_raw = extract_raw()
-    df_treated = tratamento_bronze(df_raw)
-    load_bronze(df_treated)
+    # Teste local via BQ
+    load_bronze_bq()

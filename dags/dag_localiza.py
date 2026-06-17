@@ -79,44 +79,22 @@ def run_raw_pipeline():
     gc.collect()
 
 def run_bronze_pipeline():
-    import gc
     import importlib
-    import extract_raw
     import localiza_bronze
-    importlib.reload(extract_raw)
     importlib.reload(localiza_bronze)
-    from extract_raw import extract_raw
-    from localiza_bronze import load_bronze, tratamento_bronze
+    from localiza_bronze import load_bronze_bq
     
-    print("Iniciando processamento da camada Bronze...")
-    df_raw = extract_raw()
-    df_bronze = tratamento_bronze(df_raw)
-    del df_raw
-    gc.collect()
-    
-    load_bronze(df_bronze)
-    del df_bronze
-    gc.collect()
+    print("Iniciando processamento da camada Bronze via SQL...")
+    load_bronze_bq()
 
 def run_silver_pipeline():
-    import gc
     import importlib
-    import extract_bronze
     import localiza_silver
-    importlib.reload(extract_bronze)
     importlib.reload(localiza_silver)
-    from extract_bronze import extract_bronze
-    from localiza_silver import load_silver, transform_silver
+    from localiza_silver import load_silver_bq
     
-    print("Iniciando processamento da camada Silver...")
-    df_bronze = extract_bronze()
-    df_silver = transform_silver(df_bronze)
-    del df_bronze
-    gc.collect()
-    
-    load_silver(df_silver)
-    del df_silver
-    gc.collect()
+    print("Iniciando processamento da camada Silver via SQL...")
+    load_silver_bq()
 
 def run_data_quality_pipeline():
     import gc

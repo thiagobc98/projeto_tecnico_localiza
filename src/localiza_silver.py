@@ -10,6 +10,17 @@ PROJECT_ID = "etl-teste-tecnico"
 DATASET_ID = "localiza_silver"
 TABLE_ID = "localiza_silver"
 
+def get_client():
+    client_secrets_file = os.getenv("CLIENT_SECRET")
+    if client_secrets_file and os.path.exists(client_secrets_file):
+        try:
+            return bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
+        except Exception as e:
+            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão.")
+            return bigquery.Client(project=PROJECT_ID)
+    else:
+        return bigquery.Client(project=PROJECT_ID)
+
 def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
     print("Iniciando limpeza e transformações para a camada Silver (nomes em português)...")
     
@@ -37,16 +48,7 @@ def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def load_silver(df: pd.DataFrame):
-    client_secrets_file = os.getenv("CLIENT_SECRET")
-    
-    if client_secrets_file and os.path.exists(client_secrets_file):
-        try:
-            client = bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
-        except Exception as e:
-            print(f"Aviso: Erro ao carregar credenciais do JSON ({e}). Usando credenciais padrão.")
-            client = bigquery.Client(project=PROJECT_ID)
-    else:
-        client = bigquery.Client(project=PROJECT_ID)
+    client = get_client()
         
     # Garante que o dataset 'localiza_silver' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
@@ -88,8 +90,90 @@ def load_silver(df: pd.DataFrame):
     
     print(f"Carga concluída com sucesso para {table_ref}!")
 
+def load_silver_bq():
+    client = get_client()
+    
+    # Garante que o dataset 'localiza_silver' existe no BigQuery
+    dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
+    dataset_ref.location = "US"
+    client.create_dataset(dataset_ref, exists_ok=True)
+    
+    table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+    
+    query = f"""
+    INSERT INTO `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}` (
+      dat_data_transaction,
+      cod_endereco_enviado,
+      cod_endereco_recebido,
+      vlr_valor,
+      des_tipo_transacao,
+      des_regiao,
+      vlr_ip_prefixo,
+      vlr_login_frequencia,
+      vlr_duracao_sessao,
+      des_comportamento_compra,
+      des_faixa_etaria,
+      vlr_score_risco,
+      des_categoria_risco,
+      dat_data_upload_bucket
+    )
+    WITH raw_bronze AS (
+      SELECT
+        dat_data_transaction,
+        cod_endereco_enviado,
+        cod_endereco_recebido,
+        vlr_valor,
+        des_tipo_transacao,
+        des_regiao,
+        vlr_ip_prefixo,
+        vlr_login_frequencia,
+        vlr_duracao_sessao,
+        des_comportamento_compra,
+        des_faixa_etaria,
+        vlr_score_risco,
+        des_categoria_risco,
+        dat_data_upload_bucket,
+        ROW_NUMBER() OVER(
+          PARTITION BY dat_data_transaction, cod_endereco_enviado, cod_endereco_recebido 
+          ORDER BY dat_data_upload_bucket DESC
+        ) as rn
+      FROM `{PROJECT_ID}.localiza_bronze.localiza_bronze`
+      WHERE dat_data_upload_bucket = (
+        SELECT MAX(dat_data_upload_bucket) FROM `{PROJECT_ID}.localiza_bronze.localiza_bronze`
+      )
+    )
+    SELECT
+      dat_data_transaction,
+      LOWER(TRIM(cod_endereco_enviado)) AS cod_endereco_enviado,
+      LOWER(TRIM(cod_endereco_recebido)) AS cod_endereco_recebido,
+      vlr_valor,
+      LOWER(TRIM(des_tipo_transacao)) AS des_tipo_transacao,
+      CASE 
+        WHEN TRIM(des_regiao) = '0' OR TRIM(des_regiao) = '' THEN NULL 
+        ELSE LOWER(TRIM(des_regiao)) 
+      END AS des_regiao,
+      LOWER(TRIM(vlr_ip_prefixo)) AS vlr_ip_prefixo,
+      vlr_login_frequencia,
+      vlr_duracao_sessao,
+      LOWER(TRIM(des_comportamento_compra)) AS des_comportamento_compra,
+      LOWER(TRIM(des_faixa_etaria)) AS des_faixa_etaria,
+      vlr_score_risco,
+      LOWER(TRIM(des_categoria_risco)) AS des_categoria_risco,
+      dat_data_upload_bucket
+    FROM raw_bronze
+    WHERE rn = 1
+      AND dat_data_transaction IS NOT NULL
+      AND cod_endereco_enviado IS NOT NULL
+      AND cod_endereco_recebido IS NOT NULL
+      AND vlr_valor IS NOT NULL
+      AND vlr_valor >= 0
+    """
+    
+    print("Iniciando processamento e carga da camada Silver via SQL...")
+    query_job = client.query(query)
+    query_job.result()
+    print(f"Carga da camada Silver concluída com sucesso para {table_ref}!")
+
 if __name__ == '__main__':
-    from extract_bronze import extract_bronze
-    df_bronze = extract_bronze()
-    df_silver = transform_silver(df_bronze)
-    load_silver(df_silver)
+    # Teste local via BQ
+    load_silver_bq()
