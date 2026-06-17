@@ -4,7 +4,6 @@ import os
 import gc
 from dotenv import load_dotenv
 
-# Load environment variables from .env
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
@@ -19,7 +18,7 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
         .str.strip()              # Remove espaços no início/fim do nome
         .str.lower()              # Tudo em minúsculo
         .str.replace(' ', '_')    # Substitui espaços por underline
-        .str.replace('[^\w\s]', '', regex=True) # Remove caracteres especiais (acentos, pontuações)
+        .str.replace('[^\w\s]', '', regex=True) # Remove caracteres especiais
     )
 
     df['timestamp'] = pd.to_numeric(df['timestamp'], errors='coerce')
@@ -68,7 +67,7 @@ def load_bronze(df: pd.DataFrame):
 
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
-    # Converte colunas de data de nanosegundos (ns) para microsegundos (us) para que o BigQuery detecte como TIMESTAMP
+    # Converte colunas de data de nanosegundos  para microsegundos para que o BigQuery detecte como TIMESTAMP
     if 'dat_data_transaction' in df.columns:
         df['dat_data_transaction'] = pd.to_datetime(df['dat_data_transaction'], utc=True).astype('datetime64[us, UTC]')
     if 'dat_data_upload_bucket' in df.columns:
@@ -81,7 +80,6 @@ def load_bronze(df: pd.DataFrame):
     print(f"Salvando DataFrame temporariamente em {temp_file}...")
     df.to_parquet(temp_file, index=False)
     
-    # Deleta DataFrame e força coleta de lixo
     del df
     gc.collect()
 
@@ -99,7 +97,6 @@ def load_bronze(df: pd.DataFrame):
         )
         job.result()
 
-    # Limpa o arquivo temporário
     if os.path.exists(temp_file):
         os.remove(temp_file)
 

@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
@@ -46,7 +45,7 @@ def extract_bronze() -> pd.DataFrame:
         'des_comportamento_compra': 'category',
         'des_faixa_etaria': 'category',
         'vlr_score_risco': 'float32',
-        'des_categoria_risco': 'string',  # anomaly virou string
+        'des_categoria_risco': 'string',  
         'dat_data_upload_bucket': 'datetime64[ns, UTC]'
     }
     

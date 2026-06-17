@@ -22,7 +22,7 @@ with DAG(
     'localiza_gold_tabela_2_pipeline',
     default_args=default_args,
     description='Pipeline da Camada Gold - Tabela 2 (top_receiving_addresses_sales)',
-    schedule_interval=None, # Execução manual/on-demand
+    schedule_interval=None, # Execução manual
     catchup=False,
 ) as dag:
 

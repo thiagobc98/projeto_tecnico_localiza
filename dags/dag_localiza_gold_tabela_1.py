@@ -22,7 +22,7 @@ with DAG(
     'localiza_gold_tabela_1_pipeline',
     default_args=default_args,
     description='Pipeline da Camada Gold - Tabela 1 (region_risk_average)',
-    schedule_interval=None, # Execução manual/on-demand
+    schedule_interval=None, # Execução manual
     catchup=False,
 ) as dag:
 

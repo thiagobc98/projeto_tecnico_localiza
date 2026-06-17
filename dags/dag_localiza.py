@@ -20,19 +20,19 @@ def check_new_file_condition():
     def to_utc_datetime(val):
         if val is None:
             return None
-        # Se for numérico (epoch em nanossegundos ou segundos)
+        # Se for numérico 
         if isinstance(val, (int, float)):
             if val > 1e11:  # Nanossegundos
                 return pd.to_datetime(val, unit='ns', utc=True).to_pydatetime()
             else:          # Segundos
                 return pd.to_datetime(val, unit='s', utc=True).to_pydatetime()
-        # Se for string, parseia
+        # Se for string
         if isinstance(val, str):
             return pd.to_datetime(val, utc=True).to_pydatetime()
         # Caso contrário (datetime/Timestamp), normaliza para UTC
         return pd.to_datetime(val, utc=True).to_pydatetime()
 
-    # 1. Obtém a data de upload do arquivo que acabou de ser processado na RAW
+    # Obtém a data de upload do arquivo que acabou de ser processado na RAW
     raw_query = f"SELECT MAX(date_upload_file_bucket) as max_raw FROM `{project_id}.localiza_raw.raw_fraud_credit`"
     try:
         raw_result = list(client.query(raw_query).result())
@@ -44,7 +44,7 @@ def check_new_file_condition():
     if not max_raw:
         raise AirflowSkipException("Nenhum dado encontrado na tabela RAW. Pulando etapas posteriores.")
         
-    # 2. Obtém o maior timestamp de arquivo já processado na Bronze
+    # Obtém o maior timestamp de arquivo já processado na Bronze
     bronze_query = f"SELECT MAX(dat_data_upload_bucket) as max_bronze FROM `{project_id}.localiza_bronze.localiza_bronze`"
     try:
         bronze_result = list(client.query(bronze_query).result())
@@ -59,7 +59,7 @@ def check_new_file_condition():
     
     print(f"Data arquivo RAW (convertida): {max_raw_dt} | Maior data já processada na Bronze (convertida): {max_bronze_dt}")
     
-    # 3. Valida se o arquivo é novo
+    # Valida se o arquivo é novo
     if max_bronze_dt is None or max_raw_dt > max_bronze_dt:
         print("Novo arquivo detectado no bucket! Prosseguindo para as próximas camadas.")
         return True
@@ -130,7 +130,7 @@ with DAG(
     'localiza_etl_pipeline',
     default_args=default_args,
     description='Pipeline ETL de Fraude de Crédito (GCS -> BigQuery)',
-    schedule_interval='0 10 * * *', # Executa todos os dias às 10h da manhã (UTC)
+    schedule_interval='0 10 * * *', # Executa todos os dias às 10h da manhã 
     catchup=False,
 ) as dag:
 

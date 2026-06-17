@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"

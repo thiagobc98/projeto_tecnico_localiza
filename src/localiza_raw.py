@@ -7,7 +7,6 @@ import os
 import gc
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
@@ -36,7 +35,7 @@ def get_gcs_file_updated_time(bucket_name, blob_name):
 def load_raw():
     print("Iniciando carregamento da camada Raw de forma otimizada (baixo uso de RAM)...")
     
-    # 1. Configura os clientes
+    # Configura os clientes
     client_secrets_file = os.getenv("CLIENT_SECRET")
     if client_secrets_file and os.path.exists(client_secrets_file):
         try:
@@ -56,7 +55,7 @@ def load_raw():
     else:
         storage_client = storage.Client(project=PROJECT_ID)
 
-    # 2. Obtém o maior timestamp de arquivo já processado no BigQuery
+    # Obtém o maior timestamp de arquivo já processado no BigQuery
     max_raw_query = f"SELECT MAX(date_upload_file_bucket) as max_raw FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`"
     try:
         raw_result = list(bq_client.query(max_raw_query).result())
@@ -71,7 +70,7 @@ def load_raw():
     else:
         print("Nenhuma data de upload registrada no BigQuery (tabela vazia ou inexistente).")
 
-    # 3. Lista arquivos .csv no bucket GCS
+    # Lista arquivos .csv no bucket GCS
     bucket = storage_client.bucket(BUCKET_NAME)
     blobs = bucket.list_blobs()
     csv_blobs = [b for b in blobs if b.name.lower().endswith('.csv')]
@@ -100,7 +99,7 @@ def load_raw():
     local_csv = os.path.join(temp_dir, "temp_raw.csv")
     temp_parquet = os.path.join(temp_dir, "temp_raw.parquet")
     
-    # 4. Download do arquivo selecionado do GCS para o disco local em stream
+    # Download do arquivo selecionado do GCS para o disco local em stream
     print(f"Baixando arquivo {target_blob.name} do GCS para {local_csv}...")
     target_blob.download_to_filename(local_csv)
     
@@ -109,7 +108,7 @@ def load_raw():
     else:
         raise FileNotFoundError(f"Erro: O arquivo temporário {local_csv} não foi encontrado após o download!")
     
-    # 5. Conversão incremental para Parquet usando chunks
+    # Conversão incremental para Parquet usando chunks
     print("Processando CSV em chunks e gerando Parquet...")
     dtypes = {
         'timestamp': 'int64',
@@ -149,7 +148,7 @@ def load_raw():
     if os.path.exists(local_csv):
         os.remove(local_csv)
         
-    # 6. Carrega o arquivo Parquet final no BigQuery
+    # Carrega o arquivo Parquet final no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     bq_client.create_dataset(dataset_ref, exists_ok=True)

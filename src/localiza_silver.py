@@ -4,7 +4,6 @@ import os
 import gc
 from dotenv import load_dotenv
 
-# Carrega as variáveis de ambiente
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
@@ -30,7 +29,7 @@ def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
     # Substitui valores '0' ou 0 na coluna 'des_regiao' por NA
     df['des_regiao'] = df['des_regiao'].replace(['0', 0], pd.NA)
     
-    # Padroniza strings para minúsculo nas colunas categóricas/objeto
+    # Padroniza strings para minúsculo nas colunas
     for col in df.select_dtypes(include=['object', 'category', 'string']).columns:
         df[col] = df[col].astype(str).str.strip().str.lower()
             

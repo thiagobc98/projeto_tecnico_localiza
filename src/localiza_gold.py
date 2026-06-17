@@ -2,7 +2,6 @@ from google.cloud import bigquery
 import os
 from dotenv import load_dotenv
 
-# Carrega variáveis do .env
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
@@ -10,7 +9,6 @@ DATASET_ID = "localiza_gold"
 
 def get_client():
     client_secrets_file = os.getenv("CLIENT_SECRET")
-    # Autenticação híbrida
     if client_secrets_file and os.path.exists(client_secrets_file):
         try:
             return bigquery.Client.from_service_account_json(client_secrets_file, project=PROJECT_ID)
