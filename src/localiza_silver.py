@@ -99,7 +99,27 @@ def load_silver_bq():
     client.create_dataset(dataset_ref, exists_ok=True)
     
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
-    
+
+    create_table_query = f"""
+    CREATE TABLE IF NOT EXISTS `{table_ref}` (
+      dat_data_transaction     TIMESTAMP,
+      cod_endereco_enviado     STRING,
+      cod_endereco_recebido    STRING,
+      vlr_valor                NUMERIC,
+      des_tipo_transacao       STRING,
+      des_regiao               STRING,
+      vlr_ip_prefixo           STRING,
+      vlr_login_frequencia     NUMERIC,
+      vlr_duracao_sessao       NUMERIC,
+      des_comportamento_compra STRING,
+      des_faixa_etaria         STRING,
+      vlr_score_risco          FLOAT64,
+      des_categoria_risco      STRING,
+      dat_data_upload_bucket   TIMESTAMP
+    )
+    """
+    client.query(create_table_query).result()
+
     query = f"""
     INSERT INTO `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}` (
       dat_data_transaction,
