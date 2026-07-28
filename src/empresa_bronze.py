@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_bronze"
-TABLE_ID = "localiza_bronze"
+DATASET_ID = "empresa_bronze"
+TABLE_ID = "empresa_bronze"
 
 def get_client():
     client_secrets_file = os.getenv("CLIENT_SECRET")
@@ -60,7 +60,7 @@ def tratamento_bronze(df: pd.DataFrame) -> pd.DataFrame:
 def load_bronze(df: pd.DataFrame):
     client = get_client()
 
-    # Garante que o dataset 'localiza_bronze' existe no BigQuery
+    # Garante que o dataset 'empresa_bronze' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -75,7 +75,7 @@ def load_bronze(df: pd.DataFrame):
 
     import tempfile
     temp_dir = tempfile.gettempdir()
-    temp_file = os.path.join(temp_dir, "temp_localiza_bronze.parquet")
+    temp_file = os.path.join(temp_dir, "temp_empresa_bronze.parquet")
     
     print(f"Salvando DataFrame temporariamente em {temp_file}...")
     df.to_parquet(temp_file, index=False)
@@ -105,7 +105,7 @@ def load_bronze(df: pd.DataFrame):
 def load_bronze_bq():
     client = get_client()
     
-    # Garante que o dataset 'localiza_bronze' existe no BigQuery
+    # Garante que o dataset 'empresa_bronze' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -164,9 +164,9 @@ def load_bronze_bq():
       SAFE_CAST(risk_score AS FLOAT64) AS vlr_score_risco,
       anomaly AS des_categoria_risco,
       date_upload_file_bucket AS dat_data_upload_bucket
-    FROM `{PROJECT_ID}.localiza_raw.raw_fraud_credit`
+    FROM `{PROJECT_ID}.empresa_raw.raw_fraud_credit`
     WHERE date_upload_file_bucket = (
-        SELECT MAX(date_upload_file_bucket) FROM `{PROJECT_ID}.localiza_raw.raw_fraud_credit`
+        SELECT MAX(date_upload_file_bucket) FROM `{PROJECT_ID}.empresa_raw.raw_fraud_credit`
     )
     """
     

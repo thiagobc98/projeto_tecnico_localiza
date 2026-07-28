@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_bronze"
-TABLE_ID = "localiza_bronze"
+DATASET_ID = "empresa_bronze"
+TABLE_ID = "empresa_bronze"
 
 def extract_bronze() -> pd.DataFrame:
     client_secrets_file = os.getenv("CLIENT_SECRET")

@@ -33,7 +33,7 @@ def check_new_file_condition():
         return pd.to_datetime(val, utc=True).to_pydatetime()
 
     # Obtém a data de upload do arquivo que acabou de ser processado na RAW
-    raw_query = f"SELECT MAX(date_upload_file_bucket) as max_raw FROM `{project_id}.localiza_raw.raw_fraud_credit`"
+    raw_query = f"SELECT MAX(date_upload_file_bucket) as max_raw FROM `{project_id}.empresa_raw.raw_fraud_credit`"
     try:
         raw_result = list(client.query(raw_query).result())
         max_raw = raw_result[0]['max_raw'] if raw_result else None
@@ -45,7 +45,7 @@ def check_new_file_condition():
         raise AirflowSkipException("Nenhum dado encontrado na tabela RAW. Pulando etapas posteriores.")
         
     # Obtém o maior timestamp de arquivo já processado na Bronze
-    bronze_query = f"SELECT MAX(dat_data_upload_bucket) as max_bronze FROM `{project_id}.localiza_bronze.localiza_bronze`"
+    bronze_query = f"SELECT MAX(dat_data_upload_bucket) as max_bronze FROM `{project_id}.empresa_bronze.empresa_bronze`"
     try:
         bronze_result = list(client.query(bronze_query).result())
         max_bronze = bronze_result[0]['max_bronze'] if bronze_result else None
@@ -70,9 +70,9 @@ def check_new_file_condition():
 def run_raw_pipeline():
     import gc
     import importlib
-    import localiza_raw
-    importlib.reload(localiza_raw)
-    from localiza_raw import load_raw
+    import empresa_raw
+    importlib.reload(empresa_raw)
+    from empresa_raw import load_raw
     
     print("Iniciando processamento da camada Raw...")
     load_raw()
@@ -80,18 +80,18 @@ def run_raw_pipeline():
 
 def run_bronze_pipeline():
     import importlib
-    import localiza_bronze
-    importlib.reload(localiza_bronze)
-    from localiza_bronze import load_bronze_bq
+    import empresa_bronze
+    importlib.reload(empresa_bronze)
+    from empresa_bronze import load_bronze_bq
     
     print("Iniciando processamento da camada Bronze via SQL...")
     load_bronze_bq()
 
 def run_silver_pipeline():
     import importlib
-    import localiza_silver
-    importlib.reload(localiza_silver)
-    from localiza_silver import load_silver_bq
+    import empresa_silver
+    importlib.reload(empresa_silver)
+    from empresa_silver import load_silver_bq
     
     print("Iniciando processamento da camada Silver via SQL...")
     load_silver_bq()
@@ -108,7 +108,7 @@ def run_data_quality_pipeline():
     gc.collect()
 
 default_args = {
-    'owner': 'localiza',
+    'owner': 'empresa',
     'depends_on_past': False,
     'start_date': datetime(2026, 6, 16),
     'retries': 1,
@@ -116,7 +116,7 @@ default_args = {
 }
 
 with DAG(
-    'localiza_etl_pipeline',
+    'empresa_etl_pipeline',
     default_args=default_args,
     description='Pipeline ETL de Fraude de Crédito (GCS -> BigQuery)',
     schedule_interval='0 10 * * *', # Executa todos os dias às 10h da manhã 
@@ -124,7 +124,7 @@ with DAG(
 ) as dag:
 
     task_raw = PythonOperator(
-        task_id='localiza_raw',
+        task_id='empresa_raw',
         python_callable=run_raw_pipeline,
     )
 
@@ -134,17 +134,17 @@ with DAG(
     )
 
     task_bronze = PythonOperator(
-        task_id='localiza_bronze',
+        task_id='empresa_bronze',
         python_callable=run_bronze_pipeline,
     )
 
     task_silver = PythonOperator(
-        task_id='localiza_silver',
+        task_id='empresa_silver',
         python_callable=run_silver_pipeline,
     )
 
     task_data_quality = PythonOperator(
-        task_id='localiza_data_quality',
+        task_id='empresa_data_quality',
         python_callable=run_data_quality_pipeline,
     )
 

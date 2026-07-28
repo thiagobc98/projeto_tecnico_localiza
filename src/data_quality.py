@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_quality"
+DATASET_ID = "empresa_quality"
 TABLE_ID = "data_quality_report"
 
 def get_client():
@@ -24,7 +24,7 @@ def get_client():
 def run_data_quality_checks():
     client = get_client()
 
-    # Garante que o dataset localiza_quality existe
+    # Garante que o dataset empresa_quality existe
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -53,7 +53,7 @@ def run_data_quality_checks():
     # Definição das regras de validação por tabela
     # Cada regra mapeia um nome amigável para a condição SQL que representa o erro
     tables_rules = {
-        "localiza_bronze.localiza_bronze": [
+        "empresa_bronze.empresa_bronze": [
             {
                 "coluna": "dat_data_transaction",
                 "regra": "not_null",
@@ -76,7 +76,7 @@ def run_data_quality_checks():
                 "critical": False
             }
         ],
-        "localiza_silver.localiza_silver": [
+        "empresa_silver.empresa_silver": [
             {
                 "coluna": "dat_data_transaction",
                 "regra": "not_null",
@@ -192,7 +192,7 @@ def run_data_quality_checks():
 
     # Se houve falha crítica de qualidade de dados, lança erro para falhar a DAG
     if has_failures:
-        raise ValueError("O pipeline falhou nos testes de Data Quality. Verifique a tabela localiza_quality.data_quality_report.")
+        raise ValueError("O pipeline falhou nos testes de Data Quality. Verifique a tabela empresa_quality.data_quality_report.")
 
 if __name__ == '__main__':
     run_data_quality_checks()

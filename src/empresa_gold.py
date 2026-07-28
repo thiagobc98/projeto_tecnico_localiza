@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_gold"
+DATASET_ID = "empresa_gold"
 
 def get_client():
     client_secrets_file = os.getenv("CLIENT_SECRET")
@@ -21,7 +21,7 @@ def get_client():
 def load_gold_tabela_1():
     client = get_client()
 
-    # Garante que o dataset 'localiza_gold' existe no BigQuery
+    # Garante que o dataset 'empresa_gold' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -34,20 +34,20 @@ def load_gold_tabela_1():
     SELECT 
       des_regiao AS region, 
       AVG(SAFE_CAST(vlr_score_risco AS FLOAT64)) AS average_risk_score 
-    FROM `{PROJECT_ID}.localiza_silver.localiza_silver` 
+    FROM `{PROJECT_ID}.empresa_silver.empresa_silver` 
     GROUP BY 1 
     ORDER BY average_risk_score DESC
     """
     
-    print("Executando carga para localiza_gold.region_risk_average...")
+    print("Executando carga para empresa_gold.region_risk_average...")
     query_job = client.query(query_gold1)
     query_job.result()
-    print("Tabela localiza_gold.region_risk_average criada com sucesso!")
+    print("Tabela empresa_gold.region_risk_average criada com sucesso!")
 
 def load_gold_tabela_2():
     client = get_client()
 
-    # Garante que o dataset 'localiza_gold' existe no BigQuery
+    # Garante que o dataset 'empresa_gold' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -63,7 +63,7 @@ def load_gold_tabela_2():
         vlr_valor AS value,
         dat_data_transaction AS date_hour_transaction,
         ROW_NUMBER() OVER(PARTITION BY cod_endereco_recebido ORDER BY dat_data_transaction DESC) as rn
-      FROM `{PROJECT_ID}.localiza_silver.localiza_silver`
+      FROM `{PROJECT_ID}.empresa_silver.empresa_silver`
       WHERE des_tipo_transacao = 'sale'
     )
     SELECT 
@@ -76,10 +76,10 @@ def load_gold_tabela_2():
     LIMIT 3
     """
     
-    print("Executando carga para localiza_gold.top_receiving_addresses_sales...")
+    print("Executando carga para empresa_gold.top_receiving_addresses_sales...")
     query_job = client.query(query_gold2)
     query_job.result()
-    print("Tabela localiza_gold.top_receiving_addresses_sales criada com sucesso!")
+    print("Tabela empresa_gold.top_receiving_addresses_sales criada com sucesso!")
 
 def load_gold():
     """Função compatível com chamadas legadas que executa ambos os processos."""

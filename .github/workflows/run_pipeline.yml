@@ -41,7 +41,7 @@ jobs:
       id: deploy-main
       uses: google-github-actions/deploy-cloud-functions@v3
       with:
-        name: localiza-etl-pipeline
+        name: empresa-etl-pipeline
         runtime: python311
         region: us-east1
         source_dir: ./src

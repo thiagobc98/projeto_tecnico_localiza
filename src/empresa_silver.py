@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_silver"
-TABLE_ID = "localiza_silver"
+DATASET_ID = "empresa_silver"
+TABLE_ID = "empresa_silver"
 
 def get_client():
     client_secrets_file = os.getenv("CLIENT_SECRET")
@@ -50,7 +50,7 @@ def transform_silver(df: pd.DataFrame) -> pd.DataFrame:
 def load_silver(df: pd.DataFrame):
     client = get_client()
         
-    # Garante que o dataset 'localiza_silver' existe no BigQuery
+    # Garante que o dataset 'empresa_silver' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -65,7 +65,7 @@ def load_silver(df: pd.DataFrame):
 
     import tempfile
     temp_dir = tempfile.gettempdir()
-    temp_file = os.path.join(temp_dir, "temp_localiza_silver.parquet")
+    temp_file = os.path.join(temp_dir, "temp_empresa_silver.parquet")
     
     print(f"Salvando DataFrame Silver temporariamente em {temp_file}...")
     df.to_parquet(temp_file, index=False)
@@ -93,7 +93,7 @@ def load_silver(df: pd.DataFrame):
 def load_silver_bq():
     client = get_client()
     
-    # Garante que o dataset 'localiza_silver' existe no BigQuery
+    # Garante que o dataset 'empresa_silver' existe no BigQuery
     dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_ID}")
     dataset_ref.location = "US"
     client.create_dataset(dataset_ref, exists_ok=True)
@@ -157,9 +157,9 @@ def load_silver_bq():
           PARTITION BY dat_data_transaction, cod_endereco_enviado, cod_endereco_recebido 
           ORDER BY dat_data_upload_bucket DESC
         ) as rn
-      FROM `{PROJECT_ID}.localiza_bronze.localiza_bronze`
+      FROM `{PROJECT_ID}.empresa_bronze.empresa_bronze`
       WHERE dat_data_upload_bucket = (
-        SELECT MAX(dat_data_upload_bucket) FROM `{PROJECT_ID}.localiza_bronze.localiza_bronze`
+        SELECT MAX(dat_data_upload_bucket) FROM `{PROJECT_ID}.empresa_bronze.empresa_bronze`
       )
     )
     SELECT

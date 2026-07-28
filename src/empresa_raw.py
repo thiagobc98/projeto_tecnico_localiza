@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ID = "etl-teste-tecnico"
-DATASET_ID = "localiza_raw"
+DATASET_ID = "empresa_raw"
 TABLE_ID = "raw_fraud_credit"
 BUCKET_NAME = "landing-raw"
 BLOB_NAME = "df_fraud_credit.csv"

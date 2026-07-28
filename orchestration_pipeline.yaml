@@ -1,4 +1,4 @@
-pipelineId: localiza_etl_pipeline
+pipelineId: empresa_etl_pipeline
 description: "ETL pipeline orchestrating GCS -> Bronze -> Silver -> Gold layers"
 tags: ["job:datacloud:antigravity"]
 

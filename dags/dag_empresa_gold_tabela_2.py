@@ -8,10 +8,10 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-from localiza_gold import load_gold_tabela_2
+from empresa_gold import load_gold_tabela_2
 
 default_args = {
-    'owner': 'localiza',
+    'owner': 'empresa',
     'depends_on_past': False,
     'start_date': datetime(2026, 6, 16),
     'retries': 1,
@@ -19,7 +19,7 @@ default_args = {
 }
 
 with DAG(
-    'localiza_gold_tabela_2_pipeline',
+    'empresa_gold_tabela_2_pipeline',
     default_args=default_args,
     description='Pipeline da Camada Gold - Tabela 2 (top_receiving_addresses_sales)',
     schedule_interval=None, # Execução manual
@@ -27,6 +27,6 @@ with DAG(
 ) as dag:
 
     task_gold_tabela_2 = PythonOperator(
-        task_id='localiza_gold_tabela_2',
+        task_id='empresa_gold_tabela_2',
         python_callable=load_gold_tabela_2,
     )

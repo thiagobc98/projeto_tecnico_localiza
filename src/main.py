@@ -6,10 +6,10 @@ import functions_framework
 # Adiciona o diretório atual ao sys.path para garantir que os imports funcionem
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from localiza_raw import load_raw
+from empresa_raw import load_raw
 from extract_raw import extract_raw
-from localiza_bronze import load_bronze, tratamento_bronze
-from localiza_silver import load_silver, transform_silver
+from empresa_bronze import load_bronze, tratamento_bronze
+from empresa_silver import load_silver, transform_silver
 
 def run_pipeline():
     # 1. Executa a camada RAW (Lê do GCS, adiciona timestamp e escreve na tabela RAW do BigQuery)
@@ -66,7 +66,7 @@ def run_etl_cf(request):
 def run_gold_tabela_1_cf(request):
     """Ponto de entrada para o GCP Cloud Functions para rodar Gold 1 (region_risk_average)."""
     try:
-        from localiza_gold import load_gold_tabela_1
+        from empresa_gold import load_gold_tabela_1
         load_gold_tabela_1()
         return "Gold Tabela 1 (region_risk_average) executada com sucesso!", 200
     except Exception as e:
@@ -79,7 +79,7 @@ def run_gold_tabela_1_cf(request):
 def run_gold_tabela_2_cf(request):
     """Ponto de entrada para o GCP Cloud Functions para rodar Gold 2 (top_receiving_addresses_sales)."""
     try:
-        from localiza_gold import load_gold_tabela_2
+        from empresa_gold import load_gold_tabela_2
         load_gold_tabela_2()
         return "Gold Tabela 2 (top_receiving_addresses_sales) executada com sucesso!", 200
     except Exception as e:
