@@ -28,6 +28,7 @@ Menu ☰ → **APIs e serviços** → **Biblioteca**. Busque e habilite (uma por
 - **Cloud Functions API**
 - **Cloud Build API**
 - **Artifact Registry API**
+- **Cloud Run Admin API** — o Cloud Functions 2ª geração roda sobre o Cloud Run; sem essa API o deploy falha com "Cloud Run Admin API has not been used in project..."
 
 ## 3. Criar o bucket de Storage
 
