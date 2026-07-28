@@ -1,6 +1,6 @@
 environments:
   dev:
-    project: etl-teste-tecnico
+    project: etl-teste-tecnico-503722
     region: us-east1
     composer_environment: composer-teste-tec-etl
     artifact_storage:

@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 def check_new_file_condition():
     from google.cloud import bigquery
     import pandas as pd
-    project_id = "etl-teste-tecnico"
+    project_id = "etl-teste-tecnico-503722"
     client = bigquery.Client(project=project_id)
     
     def to_utc_datetime(val):

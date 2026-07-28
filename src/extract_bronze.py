@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PROJECT_ID = "etl-teste-tecnico"
+PROJECT_ID = "etl-teste-tecnico-503722"
 DATASET_ID = "empresa_bronze"
 TABLE_ID = "empresa_bronze"
 

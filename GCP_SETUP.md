@@ -3,13 +3,13 @@
 Passo a passo para colocar o pipeline no ar usando o [console.cloud.google.com](https://console.cloud.google.com), sem usar o `gcloud` no terminal.
 
 Nomes usados no repo (ajuste se for usar outros):
-- Projeto: `etl-teste-tecnico`
+- Projeto: nome `etl-teste-tecnico`, ID real `etl-teste-tecnico-503722`
 - Região: `us-east1`
 - Bucket de dados de entrada: `landing-raw`
 - Ambiente Composer: `composer-teste-tec-etl`
 - Service account: `etl-runner`
 
-> `PROJECT_ID = "etl-teste-tecnico"` está fixo em todos os arquivos de [src/](src/). Se usar outro ID de projeto, troque esse valor em todos os arquivos primeiro.
+> `PROJECT_ID = "etl-teste-tecnico-503722"` está fixo em todos os arquivos de [src/](src/). O **Nome do projeto** que você digita na criação nem sempre vira o **ID do projeto** — se o nome já estiver em uso por outra conta, o Google acrescenta um sufixo numérico automaticamente (foi o que aconteceu aqui). Depois de criar o projeto, confira o ID real em **IAM e admin** → **Configurações** e use esse valor exato no código, não o nome.
 
 ## 1. Criar o projeto
 
@@ -17,6 +17,7 @@ Nomes usados no repo (ajuste se for usar outros):
 2. Nome do projeto: `etl-teste-tecnico`.
 3. Selecione a conta de faturamento (billing account) vinculada.
 4. Clique em **Criar**.
+5. Depois de criado, vá em **IAM e admin** → **Configurações** e anote o **ID do projeto** exibido (pode vir com sufixo, ex: `etl-teste-tecnico-503722`) — é esse valor que entra em `PROJECT_ID` no código, não o nome.
 
 ## 2. Habilitar as APIs necessárias
 
@@ -105,7 +106,7 @@ Menu ☰ → **IAM e admin** → **Políticas da organização**. Busque a polí
 - Adicione uma regra com Aplicação = **Desativada**
 - **Definir política**
 
-> Só funciona se sua conta tiver o papel **Administrador de políticas da organização** (`roles/orgpolicy.policyAdmin`). Se não tiver, peça para quem administra a organização liberar essa política para o projeto `etl-teste-tecnico`.
+> Só funciona se sua conta tiver o papel **Administrador de políticas da organização** (`roles/orgpolicy.policyAdmin`). Se não tiver, peça para quem administra a organização liberar essa política para o projeto `etl-teste-tecnico-503722`.
 
 ### 10. Gerar a chave JSON
 
