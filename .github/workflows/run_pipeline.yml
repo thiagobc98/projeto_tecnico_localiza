@@ -46,6 +46,7 @@ jobs:
         region: us-east1
         source_dir: ./src
         entry_point: run_etl_cf
+        build_service_account: projects/etl-teste-tecnico-503722/serviceAccounts/etl-runner@etl-teste-tecnico-503722.iam.gserviceaccount.com
 
     - name: Deploy Gold Tabela 1 to Cloud Functions
       id: deploy-gold-1
@@ -56,6 +57,7 @@ jobs:
         region: us-east1
         source_dir: ./src
         entry_point: run_gold_tabela_1_cf
+        build_service_account: projects/etl-teste-tecnico-503722/serviceAccounts/etl-runner@etl-teste-tecnico-503722.iam.gserviceaccount.com
 
     - name: Deploy Gold Tabela 2 to Cloud Functions
       id: deploy-gold-2
@@ -66,3 +68,4 @@ jobs:
         region: us-east1
         source_dir: ./src
         entry_point: run_gold_tabela_2_cf
+        build_service_account: projects/etl-teste-tecnico-503722/serviceAccounts/etl-runner@etl-teste-tecnico-503722.iam.gserviceaccount.com

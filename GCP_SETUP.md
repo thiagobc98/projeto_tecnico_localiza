@@ -29,6 +29,9 @@ Menu ☰ → **APIs e serviços** → **Biblioteca**. Busque e habilite (uma por
 - **Cloud Build API**
 - **Artifact Registry API**
 - **Cloud Run Admin API** — o Cloud Functions 2ª geração roda sobre o Cloud Run; sem essa API o deploy falha com "Cloud Run Admin API has not been used in project..."
+- **Compute Engine API** — habilitar cria automaticamente a *Compute Engine default service account* (`NUMERO_DO_PROJETO-compute@developer.gserviceaccount.com`), necessária pro build do Cloud Functions. Sem ela, o deploy falha com "missing permission on the build service account".
+
+Depois de habilitar a Compute Engine API, conceda o papel **Cloud Build Service Account** (`roles/cloudbuild.builds.builder`) pra essa service account: **IAM e admin** → **IAM** → marque **Incluir concessões de papel fornecidas pelo Google** → encontre `NUMERO_DO_PROJETO-compute@developer.gserviceaccount.com` → editar → **Adicionar outro papel** → **Cloud Build Service Account** → **Salvar**.
 
 ## 3. Criar o bucket de Storage
 
